@@ -17,27 +17,7 @@ var question2=function(filePath){
 }
 
 var question3=function(filePath){
-    var rowConverter = function(d){
-			return {
-                case_month: d.case_month,
-				res_state: d.res_state,
-                state_fips_code: d.state_fips_code,
-				res_county: d.res_county,
-                county_fips_code: d.county_fips_code,
-                age_group: d.age_group,
-                sex: d.sex,
-				race: d.race,
-				symptom_status: d.symptom_status,
-                hosp_yn: d.hosp_yn,
-                death_yn: d.death_yn,
-                underlying_conditions_yn: d.underlying_conditions_yn
-			};
-		}
-
-    const file_data = d3.csv(filePath, rowConverter);
-    file_data.then(function(data){
-        console.log(data);
-    })
+    
 }
 
 var question4=function(filePath){
@@ -87,20 +67,29 @@ var question4=function(filePath){
 		var series = stack(count);
 		console.log(series);
 
-        var width = 500;
+        var width = 600;
         var height = 600;
-        var padding = 50;
+        var padding = 70;
 
 		var svg = d3.select("#q4_plot").append("svg")
 				.attr("height", height)
 				.attr("width", width)
+
+		var tooltip = d3.select("#q4_plot").append("div")
+                            .style("opacity", 0)
+                            .attr("class", "tooltip")
+                            .style("background-color", "white")
+                            .style("position", "absolute")
+                            .style("border-width", "2px")
+                            .style("border-radius", "5px")
+                            .style("padding", "5px");
 
 		var x = d3.scaleBand()
 						.domain(count.map(function(d){
                             return d.Gender;
                         }))
 						.range([padding, width-padding])
-						.paddingInner(0.1);
+						.padding(0.5);
 
 		var y = d3.scaleLinear()
 						.domain([0, d3.max(count, function(d){ 
@@ -132,28 +121,27 @@ var question4=function(filePath){
 					.attr("width", x.bandwidth())
 					.attr("height", function(d){
 						return y(d[0])-y(d[1]);
-					});
-
-        groups.selectAll("text")
-						.data(function(d){
-							return d;
-						}).enter().append("text")
-						.attr("x", function(d, i){
-							return x(d.data.Gender);
-						})
-						.attr("y", function (d) {
-							return y(d[0]);
-						})
-						.text(function(d){
-							return d[1]-d[0];
-						})
-						.attr("fill", "black");
+					})
+					.on("mouseover", (e,d)=>{
+                        tooltip.style("opacity", 1);
+                    })
+                    .on("mousemove", (e,d)=>{
+                        tooltip.html((d[1] - d[0])).style("left", e.pageX + "px").style("top", e.pageY + "px");
+                    })
+                    .on("mouseout", (e,d)=>{
+                        tooltip.style("opacity", 0);
+                    });
 
         svg.append("g").call(x_axis).attr("class", "x_axis")
                 .attr("transform", "translate(0," + (height - padding) + ")");
         
         svg.append("g").call(y_axis).attr("class", "y_axis")
 				.attr("transform", "translate(" + padding + ",0)");
+
+		svg.append("circle").attr("cx",460).attr("cy",80).attr("r", 6).style("fill", "#c3c3df")
+        svg.append("circle").attr("cx",460).attr("cy",100).attr("r", 6).style("fill", "#64469e")
+        svg.append("text").attr("x", 480).attr("y", 80).text("Symptomatic").style("font-size", "15px").attr("alignment-baseline","middle").style("fill", "#c3c3df")
+        svg.append("text").attr("x", 480).attr("y", 100).text("Asymptomatic").style("font-size", "15px").attr("alignment-baseline","middle").style("fill", "#64469e")
     })
 }
 
@@ -218,7 +206,7 @@ var question6=function(filePath){
 
         var width = 800;
         var height = 600;
-        var padding = 50;
+        var padding = 100;
 
 		var svg = d3.select("#q6_plot").append("svg")
 				.attr("height", height)
@@ -229,7 +217,7 @@ var question6=function(filePath){
                             return d.Month;
                         }))
 						.range([padding, width-padding])
-						.paddingInner(0.1);
+						.padding(0.1);
 
 		var y = d3.scaleLinear()
 						.domain([0, d3.max(count, function(d){ 
@@ -249,7 +237,7 @@ var question6=function(filePath){
 						
 		groups.selectAll("rect")
 					.data(function(d){
-						console.log(d);
+						console.log(d)
 						return d;
 					}).enter().append("rect")
 					.attr("x", function(d){
@@ -263,7 +251,7 @@ var question6=function(filePath){
 						return y(d[0])-y(d[1]);
 					});
 
-        groups.selectAll("text")
+		groups.selectAll("text")
 						.data(function(d){
 							return d;
 						}).enter().append("text")
@@ -283,5 +271,10 @@ var question6=function(filePath){
         
         svg.append("g").call(y_axis).attr("class", "y_axis")
 				.attr("transform", "translate(" + padding + ",0)");
+
+		svg.append("circle").attr("cx",700).attr("cy",80).attr("r", 6).style("fill", "#827cb9")
+        svg.append("circle").attr("cx",700).attr("cy",100).attr("r", 6).style("fill", "pink")
+        svg.append("text").attr("x", 720).attr("y", 80).text("Male").style("font-size", "15px").attr("alignment-baseline","middle").style("fill", "#827cb9")
+        svg.append("text").attr("x", 720).attr("y", 100).text("Female").style("font-size", "15px").attr("alignment-baseline","middle").style("fill", "pink")
     })
 }
