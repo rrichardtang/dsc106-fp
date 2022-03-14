@@ -1,5 +1,5 @@
 function finalproject(){
-    var filePath="2021data.csv";
+    var filePath="cleaned.csv";
     question1(filePath);
     question2(filePath);
     question3(filePath);
@@ -7,24 +7,10 @@ function finalproject(){
     question5(filePath);
     question6(filePath);
 }
-
-var question1=function(filePath){
-    
-}
-
-var question2=function(filePath){
-    
-}
-
-var question3=function(filePath){
-    
-}
-
-var question4=function(filePath){
-    var rowConverter = function(d){
+var rowConverter = function(d){
 			return {
                 case_month: d.case_month,
-				res_state: d.res_state,
+				res_state: d.state_name,
                 state_fips_code: d.state_fips_code,
 				res_county: d.res_county,
                 county_fips_code: d.county_fips_code,
@@ -37,7 +23,50 @@ var question4=function(filePath){
                 underlying_conditions_yn: d.underlying_conditions_yn
 			};
 		}
+var question1=function(filePath){
+    
+}
 
+var question2=function(filePath){
+    
+}
+
+var question3=function(filePath){
+	var width = 960;
+	var height = 500;
+	var lowColor = '#f9f9f9'
+	var highColor = '#bc2a66'
+
+    const file_data = d3.csv(filePath, rowConverter);
+    file_data.then(function(data){
+    	var projection = d3.geoAlbersUsa()
+						   .translate([width / 2, height / 2]) // translate to center of screen
+						   .scale([1000]); // scale things down so see entire US
+		var path = d3.geoPath() // path generator that will convert GeoJSON to SVG paths
+  				     .projection(projection); // tell path generator to use albersUsa projection
+    	var svg = d3.select("body")
+				    .append("svg")
+				    .attr("width", width)
+				    .attr("height", height);
+		gen_grouped = d3.rollup(data, v => v.length, d => d.res_state);
+		console.log(gen_grouped);
+
+		hospitalized = data.filter(function(d){return d.hosp_yn == 'Yes';});
+		h_grouped = d3.rollup(hospitalized, v => v.length, d => d.res_state);
+		console.log(h_grouped);
+
+		deceased = data.filter(function(d){return d.death_yn == 'Yes';})
+		d_grouped = d3.rollup(deceased, v => v.length, d => d.res_state);
+		console.log(h_grouped);
+
+		// var minVal = d3.min(dataArray)
+		// var maxVal = d3.max(dataArray)
+		// var ramp = d3.scaleLinear().domain([minVal,maxVal]).range([lowColor,highColor])
+
+    })
+}
+
+var question4=function(filePath){
     const file_data = d3.csv(filePath, rowConverter);
     file_data.then(function(data){
         console.log(data);
@@ -150,23 +179,6 @@ var question5=function(filePath){
 }
 
 var question6=function(filePath){
-    var rowConverter = function(d){
-			return {
-                case_month: d.case_month,
-				res_state: d.res_state,
-                state_fips_code: d.state_fips_code,
-				res_county: d.res_county,
-                county_fips_code: d.county_fips_code,
-                age_group: d.age_group,
-                sex: d.sex,
-				race: d.race,
-				symptom_status: d.symptom_status,
-                hosp_yn: d.hosp_yn,
-                death_yn: d.death_yn,
-                underlying_conditions_yn: d.underlying_conditions_yn
-			};
-		}
-
     const file_data = d3.csv(filePath, rowConverter);
     file_data.then(function(data){
         console.log(data);
