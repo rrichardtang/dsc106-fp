@@ -1,5 +1,3 @@
-import {nest} from 'd3-collection';
-
 function finalproject(){
     var filePath="cleaned.csv";
     question1(filePath);
@@ -67,9 +65,12 @@ var question3=function(filePath){
 				    .attr("height", height);
 
 		 d3.json("us-states.json", function(json) {
-		 	for (var i = 0; i < data.length; i++) {
-		 		var dataState = data[i].state;
-		 		var dataValue = data[i].value;
+		 	console.log("line 68")
+		 	for (var i = 0; i < gen_grouped.length; i++) {
+		 		var dataState = gen_grouped[i][0];
+		 		var dataValue = gen_grouped[i][1];
+		 		console.log(dataState);
+		 		console.log(dataValue)
 		 		for (var j = 0; j < json.features.length; j++) {
 			        var jsonState = json.features[j].properties.name;
 			        if (dataState == jsonState) {
@@ -80,7 +81,8 @@ var question3=function(filePath){
         			}
 		 		}
 		 	}
-		 })
+
+		 //console.log(json.features);
 
 		 svg.selectAll("path")
 	      .data(json.features)
@@ -89,7 +91,8 @@ var question3=function(filePath){
 	      .attr("d", path)
 	      .style("stroke", "#fff")
 	      .style("stroke-width", "1")
-	      .style("fill", function(d) { return ramp(d.properties.value) });
+	      .style("fill", function(d) { return ramp(d.properties[1]) });
+	      //.style("fill", function(d) { console.log(d.properties[1]) });
 
 	    var w = 140, h = 300;
 
@@ -134,7 +137,8 @@ var question3=function(filePath){
 			.attr("class", "y axis")
 			.attr("transform", "translate(41,10)")
 			.call(yAxis)
-    })
+		});
+    });
 }
 
 var question4=function(filePath){
@@ -246,78 +250,78 @@ var question4=function(filePath){
 }
 
 var question5=function(filePath){
-    const file_data = d3.csv(filePath, rowConverter);
-    var width = 600;
-    var height = 600;
-    var padding = 70;
-    var svg = d3.select("#q5_plot")
-  				.append("svg")
-  				.attr("width", width)
-    			.attr("height", height)
-    file_data.then(function(data){
-    	grouped = d3.rollup(data, v => v.length, d => d.case_month);
-    	months = []
-    	var minVal = d3.min(gen_grouped);
-		var maxVal = d3.max(gen_grouped);
+  //   const file_data = d3.csv(filePath, rowConverter);
+  //   var width = 600;
+  //   var height = 600;
+  //   var padding = 70;
+  //   var svg = d3.select("#q5_plot")
+  // 				.append("svg")
+  // 				.attr("width", width)
+  //   			.attr("height", height)
+  //   file_data.then(function(data){
+  //   	grouped = d3.rollup(data, v => v.length, d => d.case_month);
+  //   	months = []
+  //   	var minVal = d3.min(gen_grouped);
+		// var maxVal = d3.max(gen_grouped);
 
-    	for (let i=0; i < grouped.length; i++) {
-    		months.push(grouped[i][0]);
-    	}
+  //   	for (let i=0; i < grouped.length; i++) {
+  //   		months.push(grouped[i][0]);
+  //   	}
 
-    	var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
-		    .key(function(d) { return d[0];})
-		    .rollup(function(d) {
-		      q1 = d3.quantile(d.map(function(g) { return g[1];}).sort(d3.ascending),.25)
-		      median = d3.quantile(d.map(function(g) { return g[1];}).sort(d3.ascending),.5)
-		      q3 = d3.quantile(d.map(function(g) { return g[1];}).sort(d3.ascending),.75)
-		      interQuantileRange = q3 - q1
-		      min = q1 - 1.5 * interQuantileRange
-		      max = q3 + 1.5 * interQuantileRange
-		      return({q1: q1, median: median, q3: q3, interQuantileRange: interQuantileRange, min: min, max: max})
-		    })
-		    .entries(data)
+  //   	var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
+		//     .key(function(d) { return d[0];})
+		//     .rollup(function(d) {
+		//       q1 = d3.quantile(d.map(function(g) { return g[1];}).sort(d3.ascending),.25)
+		//       median = d3.quantile(d.map(function(g) { return g[1];}).sort(d3.ascending),.5)
+		//       q3 = d3.quantile(d.map(function(g) { return g[1];}).sort(d3.ascending),.75)
+		//       interQuantileRange = q3 - q1
+		//       min = q1 - 1.5 * interQuantileRange
+		//       max = q3 + 1.5 * interQuantileRange
+		//       return({q1: q1, median: median, q3: q3, interQuantileRange: interQuantileRange, min: min, max: max})
+		//     })
+		//     .entries(data)
 
 
-    	var x = d3.scaleBand()
-    			.domain(months)
-    			.range([ 0, width ]);
-    	var y = d3.scaleLinear()
-    			.domain([minval,maxVal])
-    			.range([height,0])
-    	svg.selectAll("vertLines")
-	    .data(grouped)
-	    .enter()
-	    .append("line")
-	      .attr("x1", function(d){return(x(d.key))})
-	      .attr("x2", function(d){return(x(d.key))})
-	      .attr("y1", function(d){return(y(d.value.min))})
-	      .attr("y2", function(d){return(y(d.value.max))})
-	      .attr("stroke", "black")
-	      .style("width", 40)
+  //   	var x = d3.scaleBand()
+  //   			.domain(months)
+  //   			.range([ 0, width ]);
+  //   	var y = d3.scaleLinear()
+  //   			.domain([minval,maxVal])
+  //   			.range([height,0])
+  //   	svg.selectAll("vertLines")
+	 //    .data(grouped)
+	 //    .enter()
+	 //    .append("line")
+	 //      .attr("x1", function(d){return(x(d.key))})
+	 //      .attr("x2", function(d){return(x(d.key))})
+	 //      .attr("y1", function(d){return(y(d.value.min))})
+	 //      .attr("y2", function(d){return(y(d.value.max))})
+	 //      .attr("stroke", "black")
+	 //      .style("width", 40)
 
-	    var boxWidth = 100
-	    svg.selectAll("boxes")
-		    .data(grouped)
-		    .enter()
-		    .append("rect")
-		      .attr("x", function(d){return(x(d.key)-boxWidth/2)})
-	          .attr("y", function(d){return(y(d.value.q3))})
-	          .attr("height", function(d){return(y(d.value.q1)-y(d.value.q3))})
-	          .attr("width", boxWidth )
-	          .attr("stroke", "black")
-	          .style("fill", "#69b3a2")
+	 //    var boxWidth = 100
+	 //    svg.selectAll("boxes")
+		//     .data(grouped)
+		//     .enter()
+		//     .append("rect")
+		//       .attr("x", function(d){return(x(d.key)-boxWidth/2)})
+	 //          .attr("y", function(d){return(y(d.value.q3))})
+	 //          .attr("height", function(d){return(y(d.value.q1)-y(d.value.q3))})
+	 //          .attr("width", boxWidth )
+	 //          .attr("stroke", "black")
+	 //          .style("fill", "#69b3a2")
 
-	    svg.selectAll("medianLines")
-		   .data(grouped)
-		   .enter()
-		   .append("line")
-		      .attr("x1", function(d){return(x(d.key)-boxWidth/2) })
-		      .attr("x2", function(d){return(x(d.key)+boxWidth/2) })
-		      .attr("y1", function(d){return(y(d.value.median))})
-		      .attr("y2", function(d){return(y(d.value.median))})
-		      .attr("stroke", "black")
-		      .style("width", 80)
-    })
+	 //    svg.selectAll("medianLines")
+		//    .data(grouped)
+		//    .enter()
+		//    .append("line")
+		//       .attr("x1", function(d){return(x(d.key)-boxWidth/2) })
+		//       .attr("x2", function(d){return(x(d.key)+boxWidth/2) })
+		//       .attr("y1", function(d){return(y(d.value.median))})
+		//       .attr("y2", function(d){return(y(d.value.median))})
+		//       .attr("stroke", "black")
+		//       .style("width", 80)
+  //   })
 }
 
 var question6=function(filePath){
