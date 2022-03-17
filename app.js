@@ -2,7 +2,6 @@ function finalproject(){
     var filePath="cleaning_data.csv";
     question1(filePath);
     question2(filePath);
-    // question3(filePath);
     question4(filePath);
     question5(filePath);
     question6(filePath);
@@ -237,10 +236,6 @@ var question2=function(filePath){
             .style("text-anchor", "middle")
             .text("Age vs Weeks Until Tested Positive");
 	})
-}
-
-var question3=function(filePath){
-    
 }
 
 var question4=function(filePath){
