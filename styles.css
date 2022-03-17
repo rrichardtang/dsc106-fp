@@ -6,3 +6,12 @@
 .section {
     text-align: center;
 }
+
+div.tooltip {
+    position: absolute;
+    text-align: center;
+    width: "fit-content";
+    height: "fit-content";
+    background: white;
+    padding: 10px;
+}

@@ -2,16 +2,17 @@ function finalproject(){
     var filePath="cleaning_data.csv";
     question1(filePath);
     question2(filePath);
-    question3(filePath);
+    // question3(filePath);
     question4(filePath);
     question5(filePath);
     question6(filePath);
 }
 
 var question1=function(filePath){
+	var parseTime = d3.timeParse("%Y-%m");
     var rowConverter = function(d){
 		return {
-            case_month: d.case_month,
+            case_month: parseTime(d.case_month),
 			res_state: d.res_state,
             state_fips_code: d.state_fips_code,
 			res_county: d.res_county,
@@ -33,8 +34,6 @@ var question1=function(filePath){
 	});
 
 	file_data.then(function(d) {
-    	d.forEach(s => {s.case_month=d3.timeParse("%Y-%m")(s.case_month)});
-
 		var grouped = Array.from(d3.rollup(d, v => v.length, d => d.case_month));
 		var max_cases = d3.max(grouped, function(row) { return row[1]; });
     	
@@ -43,25 +42,23 @@ var question1=function(filePath){
     	for (i = 0; i < grouped.length; i++) {
     		const curr_date = grouped[i][0];
     		const curr_cases = grouped[i][1];
-    		var curr_year = d3.timeFormat("%Y-%m")(curr_date).substring(0, 4);
+    		var curr_year = curr_date.getFullYear();
 
     		flattened.push({year: curr_year, date: curr_date, cases: curr_cases});
     	}
 
     	var width = 1000;
         var height = 800;
-        var margin = 50;
+        var margin = 120;
 
-        var svg_q1 = d3.select("#q1_plot").append("svg")
-                        .attr("width", width)
-                    	.attr("height", height)
-                        .append("g")
-                        .attr("transform", "translate(100, -20)");
+		var svg_q1 = d3.select("#q1_plot").append("svg")
+                                          .attr("width", width)
+                                          .attr("height", height)
+                                          .append("g")
+                                          .attr("transform", "translate(100, -20)")
 
         function plot(dataset, year) {
-        	console.log(dataset)
         	var xScale = d3.scaleTime().domain(d3.extent(dataset, item => item.date)).range([margin, width-margin]);
-	        // var xScale = d3.scaleBand().domain(dataset.map(function(item) {return item.date;})).range([margin, width-margin]);
         	var yScale = d3.scaleLinear().domain([0, max_cases])
                                      .range([height-margin, margin])
 
@@ -70,21 +67,19 @@ var question1=function(filePath){
 
         	var ToolTip = d3.select("#q1_plot").append("div").style("opacity", 0).attr("class", "tooltip");
 
-        	svg_q1.append("g").attr("class", "axis").attr("transform", "translate(50,0)").call(yAxis).append("text").attr("text-anchor", "end")
-        	svg_q1.append("g").attr("class", "axis").attr("transform", "translate(0,750)").call(xAxis).selectAll("text").attr("text-anchor", "end").attr("transform", "rotate(-45)")
+        	svg_q1.append("g").attr("class", "axis").attr("transform", "translate(100,0)").call(yAxis).append("text").attr("text-anchor", "end")
+        	svg_q1.append("g").attr("class", "axis").attr("transform", "translate(0,700)").call(xAxis).selectAll("text").attr("text-anchor", "end").attr("transform", "rotate(-45)")
 
-	        svg_q1.append("path")
-					.attr("class", "line").datum(dataset)
-					.attr("fill", "none")
-                    .attr("stroke", "green")
-                    .attr("stroke-width", 1.5)
-                    .attr("d", d3.line()
-                    .x(function(item) {
-                        return xScale(item.date);
-                    })
-                    .y(function(item) {
-                        return yScale(item.cases);
-                    }));
+	        svg_q1.append("path").attr("class", "line").datum(dataset).attr("fill", "none")
+                                      .attr("stroke", "green")
+                                      .attr("stroke-width", 1.5)
+                                      .attr("d", d3.line()
+                                        .x(function(item) {
+                                        	return xScale(item.date);
+                                        	})
+                                        .y(function(item) {
+                                            	return yScale(item.cases);
+                                            }))  
 
         	svg_q1.selectAll(".q1scatter").data(dataset)
                                     .enter()
@@ -108,14 +103,19 @@ var question1=function(filePath){
                                     })
 
             svg_q1.append("text")             
-            .attr("transform", "translate(" + ((width-margin)/2) + " ," + (height + 10) + ")")
+            .attr("transform", "translate(" + ((width-margin)/2) + " ," + (height - 20) + ")")
             .style("text-anchor", "middle")
             .text("Date");
 
         	svg_q1.append("text")             
-            .attr("transform", "translate(-20," + ((height-margin)/2) + ")rotate(90)")
+            .attr("transform", "translate(20," + ((height-margin)/2) + ")rotate(90)")
             .style("text-anchor", "middle")
-            .text("# of COVID-19 Deaths");
+            .text("# of COVID-19 Cases");
+
+            svg_q1.append("text")             
+            .attr("transform", "translate(" + ((width-margin)/2) + " ," + (margin / 2) + ")")
+            .style("text-anchor", "middle")
+            .text("# of COVID-19 Cases by Date");
 	    }
 
         plot(flattened, "All")
@@ -146,7 +146,97 @@ var question1=function(filePath){
 }
 
 var question2=function(filePath){
-    
+    var rowConverter = function(d){
+		var sampleAge = function(group) {
+			if (group == "65+ years") {
+				return d3.randomUniform(65, 85)()
+			} else if (group == "18 to 49 years") {
+				return d3.randomUniform(18, 49)()
+			} else if (group == "50 to 64 years") {
+				return d3.randomUniform(50, 64)()
+			} else {
+				return d3.randomUniform(0, 17)()
+			}
+		}
+
+		return {
+			case_month: d.case_month,
+			res_state: d.res_state,
+            state_fips_code: d.state_fips_code,
+			res_county: d.res_county,
+            county_fips_code: d.county_fips_code,
+            age_group: d.age_group,
+            sex: d.sex,
+			race: d.race,
+			symptom_status: d.symptom_status,
+            hosp_yn: d.hosp_yn,
+            death_yn: d.death_yn,
+            underlying_conditions_yn: d.underlying_conditions_yn,
+			age: sampleAge(d.age_group),
+			case_positive_specimen_interval: parseFloat(d["case_positive_specimen_interval"]),
+            case_onset_interval: parseFloat(d["case_onset_interval"])
+		};
+	}
+
+    var file_data = d3.csv(filePath, function(d) {
+        if (d.symptom_status == "Symptomatic") {
+        	return rowConverter(d);
+        }
+    });
+
+    file_data.then(function(d){
+		var width = 1000;
+        var height = 800;
+        var margin = 110;
+
+        var svg_q2 = d3.select("#q2_plot").append("svg")
+                                          .attr("width", width)
+                                          .attr("height", height)
+                                          .append("g")
+                                          .attr("transform", "translate(100, -20)")
+
+        var xScale = d3.scaleLinear().domain([0, d3.max(d, function(item){ 
+							return item.age;
+						})]).range([margin, width-margin]);
+    	var yScale = d3.scaleLinear().domain([0, d3.max(d, function(item){ 
+							return item.case_positive_specimen_interval;
+						})]).range([height-margin, margin])
+
+    	var xAxis = d3.axisBottom(xScale)
+    	var yAxis = d3.axisLeft(yScale)
+
+    	svg_q2.append("g").attr("class", "axis").attr("transform", "translate(100,0)").call(yAxis).append("text").attr("text-anchor", "end")
+    	svg_q2.append("g").attr("class", "axis").attr("transform", "translate(0,700)").call(xAxis).selectAll("text").attr("text-anchor", "end").attr("transform", "rotate(-45)")
+
+    	svg_q2.selectAll(".q2scatter").data(d)
+                                .enter()
+                                .append("circle")
+                                .attr("class", "q2scatter")
+                                .attr("cx", function(item) {
+                                    	return xScale(item.age);
+                                    	})
+                                .attr("cy", function(item) {
+                                			if (item.case_positive_specimen_interval > 0) {
+                                				return yScale(item.case_positive_specimen_interval);
+                                			}
+                                    	})
+                                .attr("r", 1)
+
+        svg_q2.append("text")             
+        .attr("transform", "translate(" + ((width-margin)/2) + " ," + (height - 10) + ")")
+        .style("text-anchor", "middle")
+        .text("Age");
+
+    	svg_q2.append("text")             
+        .attr("transform", "translate(0," + ((height-margin)/2) + ")rotate(90)")
+        .style("text-anchor", "middle")
+        .text("Weeks Until Tested Positive");
+
+        svg_q2.append("text")             
+            .attr("transform", "translate(" + ((width-margin)/2) + " ," + (margin / 2) + ")")
+            .style("text-anchor", "middle")
+            .text("Age vs Weeks Until Tested Positive");
+	})
 }
 
 var question3=function(filePath){
@@ -229,7 +319,7 @@ var question4=function(filePath){
 		svg.append("text")
 			.attr("x", width/2)
 			.attr("y", padding/2)
-			.text("Covid Deaths for Symptomatic and Asymptomatic")
+			.text("COVID Death for Symptomatic and Asymptomatic by Gender")
 			.style("font-size", "16px")
 			.attr("text-anchor", "middle");
 
@@ -336,6 +426,15 @@ var question4=function(filePath){
         svg.append("circle").attr("cx",480).attr("cy",100).attr("r", 6).style("fill", "#c3c3df")
         svg.append("text").attr("x", 500).attr("y", 80).text("Symptomatic").style("font-size", "15px").attr("alignment-baseline","middle").style("fill", "#64469e")
         svg.append("text").attr("x", 500).attr("y", 100).text("Asymptomatic").style("font-size", "15px").attr("alignment-baseline","middle").style("fill", "#c3c3df")
+
+		svg.append("text")             
+            .attr("transform", "translate(" + ((width-padding)/2) + " ," + (height-35) + ")")
+            .text("Gender");
+		
+		svg.append("text")             
+			.attr("transform", "translate(0," + ((height-padding)/2) + ")rotate(90)")
+			.style("text-anchor", "middle")
+			.text("# of COVID Death");
     })
 }
 
@@ -399,20 +498,32 @@ var question5=function(filePath){
 			return ({q1: q1, median: median, q3: q3, interQuantileRange: interQuantileRange, min: min, max: max})
 		}
 
-		var final = [{"key": "Death", "val": stats(deaths)}, {"key": "Hospitalize", "val": stats(hosp)}];
+		var final = [{"key": "Dead", "val": stats(deaths)}, {"key": "Hospitalized", "val": stats(hosp)}];
 		console.log(final);
+
+		var color = d3.scaleOrdinal()
+                        .domain(["Dead", "Hospitalized"])
+                        .range(["red", "#fca36e"]);
 		
 		var width = 500;
         var height = 500;
 		var boxwidth = 100;
-        var padding = 50;
+        var padding = 70;
 
 		var svg = d3.select("#q5_plot").append("svg")
 				.attr("height", height)
 				.attr("width", width);
+		
+		svg.append("text")
+			.attr("x", width/2)
+			.attr("y", padding/2)
+			.text("Box Plots")
+			.style("font-size", "16px")
+			.attr("text-anchor", "middle")
+			.style("fill", "black");
 
 		var x = d3.scaleBand()
-						.domain(["Death", "Hospitalize"])
+						.domain(["Dead", "Hospitalized"])
 						.range([padding, width-padding])
 						.paddingInner(1)
     					.paddingOuter(.5);
@@ -462,9 +573,9 @@ var question5=function(filePath){
 			})
 			.attr("width", boxwidth)
 			.attr("stroke", "black")
-			.style("fill", "#fca36e")
+			.style("fill", d=>color(d.key))
 		
-		svg.selectAll("medianLines")
+		svg.selectAll("median")
 			.data(final)
 			.enter()
 			.append("line")
@@ -485,11 +596,62 @@ var question5=function(filePath){
 			.attr("stroke", "black")
 			.style("width", 80)
 
+		svg.selectAll("min")
+			.data(final)
+			.enter()
+			.append("line")
+			.transition()
+			.duration(1000)
+			.attr("x1", function(d){
+				return x(d.key)-boxwidth/2;
+			})
+			.attr("x2", function(d){
+				return x(d.key)+boxwidth/2;
+			})
+			.attr("y1", function(d){
+				return y(d.val.min);
+			})
+			.attr("y2", function(d){
+				return y(d.val.min);
+			})
+			.attr("stroke", "black")
+			.style("width", 80)
+
+		svg.selectAll("max")
+			.data(final)
+			.enter()
+			.append("line")
+			.transition()
+			.duration(1000)
+			.attr("x1", function(d){
+				return x(d.key)-boxwidth/2;
+			})
+			.attr("x2", function(d){
+				return x(d.key)+boxwidth/2;
+			})
+			.attr("y1", function(d){
+				return y(d.val.max);
+			})
+			.attr("y2", function(d){
+				return y(d.val.max);
+			})
+			.attr("stroke", "black")
+			.style("width", 80)
+
 		svg.append("g").call(x_axis).attr("class", "x_axis")
                 .attr("transform", "translate(0," + (height - padding) + ")");
         
         svg.append("g").call(y_axis).attr("class", "y_axis")
-				.attr("transform", "translate(" + padding + ",0)");		
+				.attr("transform", "translate(" + padding + ",0)");	
+				
+		svg.append("text")
+            .attr("transform", "translate(" + ((width-padding)/2) + " ," + (height-15) + ")")
+            .text("Status");
+
+		svg.append("text")             
+			.attr("transform", "translate(0," + ((height-70)/2) + ")rotate(90)")
+			.style("text-anchor", "middle")
+			.text("# of Patient Each Month");
 	})
 }
 
@@ -522,7 +684,7 @@ var question6=function(filePath){
         var count = [];
 
         for (let i = 0; i < valid_data.length; i++) {
-            if (!month.includes(valid_data[i].case_month) && valid_data[i].case_month > "2020-02") {
+            if (!month.includes(valid_data[i].case_month)) {
                 month.push(valid_data[i].case_month);
             }
         }
@@ -542,26 +704,9 @@ var question6=function(filePath){
 
         console.log(count);
 
-        var colors = function(i){
-			colorarray = ["#827cb9", "pink"];
-			return colorarray[i];
-		}
-
-        var stack = d3.stack().keys(["Male", "Female"]);
-		var series = stack(count);
-		console.log(series);
-
         var width = 1200;
         var height = 600;
-        var padding = 50;
-
-		var tooltip = d3.select("#q6_plot").append("div")
-                            .style("opacity", 0)
-                            .style("background-color", "white")
-                            .style("position", "absolute")
-                            .style("border-width", "2px")
-                            .style("border-radius", "5px")
-                            .style("padding", "5px");
+        var padding = 70;
 
 		var svg = d3.select("#q6_plot").append("svg")
 				.attr("height", height)
@@ -570,7 +715,7 @@ var question6=function(filePath){
 		svg.append("text")
 			.attr("x", width/2)
 			.attr("y", padding/2)
-			.text("Number of Hospitalizations By Gender")
+			.text("Number of Hospitalized By Gender")
 			.style("font-size", "16px")
 			.attr("text-anchor", "middle")
 			.style("fill", "black");
@@ -579,48 +724,31 @@ var question6=function(filePath){
 						.domain(count.map(function(d){
                             return d.Month;
                         }))
-						.range([padding, width-padding])
-						.padding(0.1);
+						.range([padding, width-padding]);
 
 		var y = d3.scaleLinear()
-						.domain([0, d3.max(count, function(d){ 
-							return d.Male + d.Female;
-						})])
+						.domain([-8000, 8000])
 						.range([height-padding, padding]);
         
         var x_axis = d3.axisBottom().scale(x);
         var y_axis = d3.axisLeft().scale(y);
 
-		var groups = svg.selectAll(".gbars")
-						.data(series).enter().append("g")
-						.attr("class", "gbars")
-						.attr("fill", function(d, i){
-							return colors(i);
-						});
-						
-		groups.selectAll("rect")
-					.data(function(d){
-						return d;
-					}).enter().append("rect")
-					.attr("x", function(d){
-					    return x(d.data.Month);
-					})
-    				.attr("y", function (d) {
-						return y(d[1]);
-					})
-					.attr("width", x.bandwidth())
-					.attr("height", function(d){
-						return y(d[0])-y(d[1]);
-					})
-					.on("mouseover", (e,d)=>{
-                        tooltip.style("opacity", 1);
-                    })
-                    .on("mousemove", (e,d)=>{
-                        tooltip.html((d[1] - d[0])).style("left", e.pageX + "px").style("top", e.pageY + "px");
-                    })
-                    .on("mouseout", (e,d)=>{
-                        tooltip.style("opacity", 0);
-                    });
+		var color = d3.scaleOrdinal()
+                        .domain(["Male", "Female"])
+                        .range(["#827cb9", "pink"]);
+
+		var stack = d3.stack().offset(d3.stackOffsetSilhouette)
+                        .keys(["Female", "Male"])(count);
+
+		console.log(stack)
+
+		svg.selectAll("layers")
+                .data(stack).enter().append("path")
+                .style("fill", d=>color(d.key))
+                .attr("d", d3.area()
+                    .x(d=>x(d.data.Month))
+                    .y0(d=>y(d[0]))
+                    .y1(d=>y(d[1])))
 
         svg.append("g").call(x_axis).attr("class", "x_axis")
                 .attr("transform", "translate(0," + (height - padding) + ")");
@@ -632,5 +760,14 @@ var question6=function(filePath){
         svg.append("circle").attr("cx",1100).attr("cy",100).attr("r", 6).style("fill", "pink")
         svg.append("text").attr("x", 1120).attr("y", 80).text("Male").style("font-size", "15px").attr("alignment-baseline","middle").style("fill", "#827cb9")
         svg.append("text").attr("x", 1120).attr("y", 100).text("Female").style("font-size", "15px").attr("alignment-baseline","middle").style("fill", "pink")
+
+		svg.append("text")
+            .attr("transform", "translate(" + ((width-padding)/2) + " ," + (height-15) + ")")
+            .text("Month");
+		
+		svg.append("text")             
+			.attr("transform", "translate(0," + ((height-padding)/2) + ")rotate(90)")
+			.style("text-anchor", "middle")
+			.text("# of Hospitalized");
     })
 }
