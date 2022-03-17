@@ -633,6 +633,12 @@ var question5=function(filePath){
 			.attr("stroke", "black")
 			.style("width", 80)
 
+		var zoomBoxes = d3.zoom()
+						  .on("zoom",function(e,d){
+						  	svg.attr("transform",e.transform)
+						  });
+		svg.call(zoomBoxes);
+
 		svg.append("g").call(x_axis).attr("class", "x_axis")
                 .attr("transform", "translate(0," + (height - padding) + ")");
         
